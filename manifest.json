@@ -1,0 +1,11 @@
+{
+    "manifest_version": 3,
+    "name": "FaceitPositionExtension",
+    "version": "1.0.0",
+    "content_scripts": [
+        {
+            "matches": ["https://www.faceit.com/*"],
+            "js": ["Content.js"]
+        }
+    ]
+}
