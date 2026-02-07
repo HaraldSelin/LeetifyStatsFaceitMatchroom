@@ -1,4 +1,4 @@
-const _leeify_key = window._leeify_key;
+const _leetify_key = window._leetify_key;
 const _faceitApi = window._faceitApi;
 
 
@@ -15,7 +15,7 @@ const interval = setInterval(async () => {
     if (roster.length === 0) return;
 
     clearInterval(interval);
-
+    const playerEntries = [];
     for (const div of roster) {
         const name = div.textContent.trim().replace(/\s+/g, "");
         nameArray.push(name);
@@ -25,19 +25,24 @@ const interval = setInterval(async () => {
         if(steam64) {
             console.log(steam64)
             steam64Array.push(steam64); 
+
+            const container = div.closest('[class*="RosterParty__"]');
+
+            playerEntries.push({
+                container,
+                steam64
+            });
         }
     }
     
-    await main();
+    await main(playerEntries);
 }, 500); 
 
 
 async function getSteamID(name) {
     try {
-        if (!_faceitApi) throw new Error("FACEIT API key is missing!");
-
         const response = await fetch(
-            `${faceitUrl}?nickname=${encodeURIComponent(name)}&game=csgo`,
+            `${faceitUrl}?nickname=${encodeURIComponent(name)}`,
             {
                 headers: {
                     Authorization: `Bearer ${_faceitApi}`
@@ -46,28 +51,41 @@ async function getSteamID(name) {
         );
 
         if (!response.ok) {
-            throw new Error(`Response status: ${response.status}`);
+            throw new Error(`FACEIT response: ${response.status}`);
         }
 
         const result = await response.json();
-
-        // steam_id_64 is a top-level field in the response
-        const steamId64 = result.steam_id_64;
-
-        return steamId64;
+        return result.games.cs2.game_player_id;
 
     } catch (error) {
-        console.error(error.message);
+        console.error("FACEIT:", error.message);
         return null;
     }
 }
 
-async function main() {
-    for(const steam64 of steam64Array) {
-        const rating = await getData(steam64);
-        console.log(rating)
+
+async function main(playerEntries) {
+
+    for (const entry of playerEntries) {
+
+        if (!entry.steam64 || !entry.container) continue;
+
+        const result = await getData(entry.steam64);
+        //  if (!res) continue;
+
+        const ratingDiv = document.createElement("div");
+        ratingDiv.className = "leetify-rating";
+
+        ratingDiv.textContent =
+            `Leetify: ${result.ranks.leetify.toFixed(1)} | Aim: ${result.rating.aim.toFixed(1)} | Pos: ${result.rating.positioning.toFixed(1)} | Util: ${result.rating.utility.toFixed(1)}`;
+
+        entry.container.appendChild(ratingDiv);
+
+        await sleep(600);
     }
 }
+
+
 
 async function getData(steam64)
 {
@@ -86,7 +104,7 @@ async function getData(steam64)
             throw new Error(`Response status: ${response.status}`);
         }
         const result = await response.json();
-        return result.rating;
+        return result;
 
     } catch(error) {
         console.error(error.message);
@@ -94,4 +112,9 @@ async function getData(steam64)
     }
         
 }
+
+function sleep(ms) {
+    return new Promise(r => setTimeout(r, ms));
+}
+
 

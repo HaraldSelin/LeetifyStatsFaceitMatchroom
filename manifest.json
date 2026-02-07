@@ -7,5 +7,11 @@
             "matches": ["https://www.faceit.com/*"],
             "js": ["api.js", "Content.js"]
         }
+    ],
+    "host_permissions": [
+    "https://api-public.cs-prod.leetify.com/*",
+    "https://open.faceit.com/*"
     ]
+
+
 }
